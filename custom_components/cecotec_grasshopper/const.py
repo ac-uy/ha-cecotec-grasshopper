@@ -5,20 +5,26 @@ ROBOTS = "robots"
 DATAHANDLER = "data_handler"
 
 # ── Connection ────────────────────────────────────────────────────────────────
-# The GrassHopper 500 uses the sk-robot.com OEM cloud backend.
-# Cecotec may white-label this under their own domain; if login fails with
-# URL_CECOTEC, fall back to URL_SKROBOT.
-#
-# TODO: Confirm the exact host by sniffing the "Conga GrassHopper 500 Map"
-#       app traffic (package: es.cecotec.congagrasshopper500map).
-#       Use mitmproxy + Android emulator and look for POST /auth/oauth/token.
-#       Replace URL_CECOTEC with whatever host the app actually calls.
-URL_CECOTEC = "https://server.sk-robot.com/api"   # best guess — update if needed
+URL_CECOTEC = "https://server.sk-robot.com/api"
 HOST_CECOTEC = "server.sk-robot.com"
 
-# Endpoint paths (same as sk-robot OEM platform)
+# Endpoint paths
 PATH_AUTH = "/auth/oauth/token"
 PATH_DEVICE_LIST = "/mower/device-user/list"
+PATH_SET_WORK_STATUS = "/app_mower/device/setWorkStatus"
+PATH_DEVICE_SETTINGS = "/mower/device-setting"
+
+# ── MQTT ──────────────────────────────────────────────────────────────────────
+MQTT_HOST = "mqtts.sk-robot.com"
+MQTT_PORT = 1883
+MQTT_USERNAME = "app"
+MQTT_PASSWORD = "h4ijwkTnyrA"
+
+# ── Command modes ─────────────────────────────────────────────────────────────
+CMD_START = 1
+CMD_PAUSE = 0
+CMD_HOME = 2
+CMD_BORDER = 4
 
 # ── Mower states ──────────────────────────────────────────────────────────────
 STATE_STANDBY = "standby"

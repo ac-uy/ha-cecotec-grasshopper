@@ -85,20 +85,17 @@ class GrassHopperLawnMower(GrassHopperEntity, LawnMowerEntity):
 
     async def async_start_mowing(self) -> None:
         """Start or resume mowing."""
-        # Check if there's a mowing mode select entity to determine edge mode
         mowing_mode_entity = f"select.{self._device.device_sn}_mowing_mode"
         mowing_mode_state = self.hass.states.get(mowing_mode_entity)
         
-        # Default to normal mowing (CMD_START = 1)
-        command = 1
         if mowing_mode_state and mowing_mode_state.state == "edge":
-            command = 4  # CMD_BORDER
-        
-        await self.hass.async_add_executor_job(
-            self.coordinator.api.send_command,
-            self._device.device_sn,
-            command,
-        )
+            await self.hass.async_add_executor_job(
+                self.coordinator.api.start_border, self._device.device_sn
+            )
+        else:
+            await self.hass.async_add_executor_job(
+                self.coordinator.api.start_mowing, self._device.device_sn
+            )
         await self.coordinator.async_request_refresh()
 
     async def async_pause(self) -> None:

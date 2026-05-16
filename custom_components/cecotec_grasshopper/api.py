@@ -7,17 +7,14 @@ Protocol notes
 --------------
 * Auth:  POST /auth/oauth/token  (OAuth2 password grant)
 * Devices: GET /mower/device-user/list
-* Commands: POST /mower/device/operate  (body: {"deviceSn": ..., "operate": N})
-* State is pushed via MQTT; polling /mower/device/detail is the fallback.
-
-TODO: If login fails against URL_CECOTEC, the app may use a white-labelled
-      host.  Capture traffic from the app with mitmproxy to confirm:
-        adb shell settings put global http_proxy <your-pc-ip>:8080
-      Look for POST /auth/oauth/token and note the Host header.
+* Commands: POST /app_mower/device/setWorkStatus
+* Settings: GET /mower/device-setting/{deviceSn}
+* MQTT status push: mqtts.sk-robot.com:1883 (user: app, pass: h4ijwkTnyrA)
 """
 
 from __future__ import annotations
 
+import json
 import logging
 from threading import Timer
 from typing import Any
@@ -25,9 +22,19 @@ from typing import Any
 import requests
 
 from .const import (
+    CMD_BORDER,
+    CMD_HOME,
+    CMD_PAUSE,
+    CMD_START,
     HOST_CECOTEC,
+    MQTT_HOST,
+    MQTT_PASSWORD,
+    MQTT_PORT,
+    MQTT_USERNAME,
     PATH_AUTH,
     PATH_DEVICE_LIST,
+    PATH_DEVICE_SETTINGS,
+    PATH_SET_WORK_STATUS,
     URL_CECOTEC,
 )
 
@@ -35,12 +42,6 @@ _LOGGER = logging.getLogger(__name__)
 
 # OAuth2 Basic auth header — same value used by all sk-robot OEM apps
 _BASIC_AUTH = "Basic YXBwOmFwcA=="
-
-# Operate codes sent to /mower/device/operate
-CMD_START = 1
-CMD_PAUSE = 2
-CMD_HOME = 3
-CMD_BORDER = 4
 
 
 class GrassHopperDevice:
@@ -78,6 +79,7 @@ class GrassHopperAPI:
         self._refresh_timer: Timer | None = None
         self.login_ok: bool = False
         self.devices: list[GrassHopperDevice] = []
+        self.user_id: int | None = None
 
     # ── Auth ──────────────────────────────────────────────────────────────────
 
@@ -107,8 +109,9 @@ class GrassHopperAPI:
                 _LOGGER.error("Login failed — no access_token in response: %s", data)
                 return False
             self._session = data
+            self.user_id = data.get("user_id")
             self.login_ok = True
-            _LOGGER.debug("Login successful, token expires in %s s", data.get("expires_in"))
+            _LOGGER.debug("Login successful, user_id=%s, token expires in %s s", self.user_id, data.get("expires_in"))
             self._schedule_token_refresh(data.get("expires_in", 3600))
             return True
         except Exception as exc:  # noqa: BLE001
@@ -147,6 +150,7 @@ class GrassHopperAPI:
             data = response.json()
             if "access_token" in data:
                 self._session = data
+                self.user_id = data.get("user_id", self.user_id)
                 self._schedule_token_refresh(data.get("expires_in", 3600))
                 _LOGGER.debug("Token refreshed successfully")
             else:
@@ -188,35 +192,14 @@ class GrassHopperAPI:
 
     # ── State polling ─────────────────────────────────────────────────────────
 
-    def fetch_device_state(self, device_sn: str) -> dict[str, Any] | None:
-        """Poll the current state of a single mower."""
-        try:
-            response = requests.get(
-                url=URL_CECOTEC + f"/mower/device/detail?deviceSn={device_sn}",
-                headers=self._auth_header,
-                timeout=10,
-            )
-            data = response.json()
-            if data.get("code", -1) != 0:
-                _LOGGER.debug("State poll error for %s: %s", device_sn, data)
-                return None
-            return data.get("data")
-        except Exception as exc:  # noqa: BLE001
-            _LOGGER.error("fetch_device_state exception: %s", exc)
-            return None
-
     def update_device(self, device: GrassHopperDevice) -> bool:
         """Refresh a device object in-place. Returns True if data was received."""
-        # The device list already contains all the state we need
-        # We only need to re-fetch the device list to get updated state
         devices = self.fetch_device_list()
         if not devices:
             device.online = False
             return False
-        # Find the matching device in the refreshed list
         for fresh in devices:
             if fresh.device_sn == device.device_sn:
-                # Copy all state from the fresh device
                 device.raw_data = fresh.raw_data
                 device.mode = fresh.mode
                 device.battery = fresh.battery
@@ -230,20 +213,33 @@ class GrassHopperAPI:
 
     # ── Commands ──────────────────────────────────────────────────────────────
 
-    def send_command(self, device_sn: str, operate: int) -> bool:
-        """Send an operate command to the mower."""
+    def send_command(self, device_sn: str, mode: int) -> bool:
+        """Send a work status command to the mower.
+
+        Modes: 1=Start, 0=Pause, 2=Home, 4=Border
+        """
         try:
-            # Try the standard endpoint first
             response = requests.post(
-                url=URL_CECOTEC + "/mower/device/operate",
-                headers=self._auth_header,
-                json={"deviceSn": device_sn, "operate": operate},
+                url=URL_CECOTEC + PATH_SET_WORK_STATUS,
+                headers={
+                    "Accept-Language": self._language,
+                    "Authorization": "bearer " + self._session.get("access_token", ""),
+                    "Content-Type": "application/json",
+                    "Host": HOST_CECOTEC,
+                    "Connection": "Keep-Alive",
+                    "User-Agent": "okhttp/4.8.1",
+                },
+                json={
+                    "appId": self.user_id,
+                    "deviceSn": device_sn,
+                    "mode": mode,
+                },
                 timeout=10,
             )
             data = response.json()
-            _LOGGER.debug("send_command response: %s", data)
+            _LOGGER.debug("send_command(mode=%d) response: %s", mode, data)
             if data.get("code", -1) != 0:
-                _LOGGER.error("Command %d failed for %s: %s", operate, device_sn, data)
+                _LOGGER.error("Command mode=%d failed for %s: %s", mode, device_sn, data)
                 return False
             return True
         except Exception as exc:  # noqa: BLE001
@@ -261,6 +257,10 @@ class GrassHopperAPI:
     def dock(self, device_sn: str) -> bool:
         """Send the mower home."""
         return self.send_command(device_sn, CMD_HOME)
+
+    def start_border(self, device_sn: str) -> bool:
+        """Start border/edge mowing."""
+        return self.send_command(device_sn, CMD_BORDER)
 
     # ── Cleanup ───────────────────────────────────────────────────────────────
 

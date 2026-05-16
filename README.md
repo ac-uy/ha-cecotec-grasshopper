@@ -6,23 +6,21 @@ A custom Home Assistant integration for the **Cecotec GrassHopper 500** robot mo
 [![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/ac-uy/ha-cecotec-grasshopper/blob/main/LICENSE)
 [![HACS](https://img.shields.io/badge/HACS-Custom-orange.svg?style=flat-square)](https://hacs.xyz/)
 
-## ⚠️ Current Status: Read-Only Integration
+## Features ✅
 
-**This integration currently provides status monitoring only.** Command functionality (start/pause/dock) is under investigation as the sk-robot.com cloud API does not expose a working command endpoint via REST.
-
-### What Works ✅
+### Status Monitoring (Real-Time via MQTT)
 - 🔋 **Battery level** monitoring (0-100%)
 - 📶 **WiFi signal strength** tracking (0-3)
 - 🟢 **Online status** detection
 - ⚠️ **Error detection** with error codes and messages
-- 🔄 **Auto-refresh** every 30 seconds
+- 🔄 **Real-time updates** via MQTT push (with 60s polling fallback)
 - 🌍 **Multi-language support** (English, Spanish)
 
-### What Doesn't Work ❌
-- 🚀 **Start/Pause/Dock** commands (API endpoint returns "method not supported")
-- 🔲 **Mowing mode selection** (edge/normal) - UI exists but commands don't work
-
-We are investigating alternative methods (MQTT, Bluetooth, or undocumented endpoints) to enable command functionality. Contributions welcome!
+### Commands ✅
+- 🚀 **Start mowing** - Begin automatic mowing
+- ⏸️ **Pause** - Stop the mower in place
+- 🏠 **Return to dock** - Send mower back to charging station
+- 🔲 **Edge/border mowing** - Mow along the perimeter
 
 ## Supported Devices
 
@@ -68,24 +66,20 @@ The integration will discover your mower and create the following entities:
 
 ### Entities Created
 
-| Entity | Type | Description | Status |
-|--------|------|-------------|--------|
-| `lawn_mower.mymower` | Lawn Mower | Main control entity (start/pause/dock) | ⚠️ Commands not working |
-| `select.mymower_mowing_mode` | Select | Mowing mode selector (normal/edge) | ⚠️ Commands not working |
-| `sensor.mymower_battery` | Sensor | Battery percentage (0-100%) | ✅ Working |
-| `sensor.mymower_wi_fi_level` | Sensor | WiFi signal strength (0-3) | ✅ Working |
-| `sensor.mymower_error_code` | Sensor | Error code (if any) | ✅ Working |
-| `sensor.mymower_error_message` | Sensor | Error description | ✅ Working |
-| `binary_sensor.mymower_online` | Binary Sensor | Online status | ✅ Working |
-| `binary_sensor.mymower_error` | Binary Sensor | Error flag | ✅ Working |
+| Entity | Type | Description |
+|--------|------|-------------|
+| `lawn_mower.mymower` | Lawn Mower | Main control entity (start/pause/dock) |
+| `select.mymower_mowing_mode` | Select | Mowing mode selector (normal/edge) |
+| `sensor.mymower_battery` | Sensor | Battery percentage (0-100%) |
+| `sensor.mymower_wi_fi_level` | Sensor | WiFi signal strength (0-3) |
+| `sensor.mymower_error_code` | Sensor | Error code (if any) |
+| `sensor.mymower_error_message` | Sensor | Error description |
+| `binary_sensor.mymower_online` | Binary Sensor | Online status |
+| `binary_sensor.mymower_error` | Binary Sensor | Error flag |
 
 ## Usage
 
-### ⚠️ Note: Commands Currently Not Working
-
-The automation examples below are provided for future reference when command functionality is restored. Currently, only status monitoring works.
-
-### Automations Example (Future)
+### Automations Example
 
 Start mowing at 9 AM on weekdays:
 
@@ -145,21 +139,13 @@ automation:
 - Check if the mower is actually online in the Cecotec app
 - Review the error logs for API response issues
 
-### Commands don't work (start/pause/dock)
-
-**This is a known issue.** The sk-robot.com cloud API does not expose a working command endpoint via REST. We are investigating:
-- MQTT protocol (mower may subscribe to MQTT topics for commands)
-- Bluetooth protocol (local connection may be required)
-- Undocumented API endpoints
-
-If you have experience with reverse engineering or MQTT, contributions are welcome! See [CONTRIBUTING.md](CONTRIBUTING.md).
-
 ## Technical Details
 
 - **Backend**: sk-robot.com OEM platform (shared with Sunseeker, Adano mowers)
 - **Authentication**: OAuth2 password grant with automatic token refresh
-- **Update Interval**: 30 seconds (configurable)
-- **State Source**: Device list API response (no separate detail endpoint needed)
+- **Commands**: REST API (`/app_mower/device/setWorkStatus`)
+- **Status Updates**: MQTT push via `mqtts.sk-robot.com:1883` (with REST polling fallback)
+- **Update Interval**: Real-time via MQTT; 60s polling fallback
 
 ## Contributing
 
@@ -183,7 +169,8 @@ This is an unofficial integration. Cecotec is not affiliated with this project. 
 ## Credits
 
 - Built for Home Assistant
-- Inspired by other robot mower integrations
+- Command protocol discovered thanks to [Sdahl1234/Sunseeker-lawn-mower](https://github.com/Sdahl1234/Sunseeker-lawn-mower) — the integration that figured out the correct API endpoints and MQTT credentials for the sk-robot.com platform
+- MQTT protocol documentation by [OlliKantola/Sunseeker_LawnMower_Control](https://github.com/OlliKantola/Sunseeker_LawnMower_Control)
 - Thanks to the Home Assistant community
 
 ---

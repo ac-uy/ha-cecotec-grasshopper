@@ -56,6 +56,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for coordinator in coordinators:
         await coordinator.async_config_entry_first_refresh()
 
+    # Start MQTT for real-time status push
+    for coordinator in coordinators:
+        await coordinator.async_setup()
+
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         DATAHANDLER: api,
         ROBOTS: coordinators,
@@ -97,6 +101,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         entry_data = hass.data[DOMAIN].pop(entry.entry_id)
         api: GrassHopperAPI = entry_data[DATAHANDLER]
+        # Stop MQTT connections
+        for coordinator in entry_data[ROBOTS]:
+            coordinator.stop_mqtt()
         api.unload()
     return unload_ok
 
