@@ -1,0 +1,38 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Cecotec Conga GrassHopper",
+        "description": "Introduce las credenciales que usas en la app **{app_name}**.",
+        "data": {
+          "account_name": "Nombre de cuenta",
+          "email": "Correo electrónico",
+          "password": "Contraseña"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Correo o contraseña incorrectos. Comprueba tus credenciales en la app Conga GrassHopper 500 Map.",
+      "no_devices": "Inicio de sesión correcto pero no se encontraron cortacéspedes en esta cuenta.",
+      "cannot_connect": "No se puede conectar con la nube de Cecotec. Comprueba tu conexión a internet."
+    },
+    "abort": {
+      "already_configured": "Esta cuenta ya está configurada."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery": { "name": "Batería" },
+      "wifi_level": { "name": "Nivel Wi-Fi" },
+      "error_code": { "name": "Código de error" },
+      "error_text": { "name": "Mensaje de error" }
+    },
+    "binary_sensor": {
+      "online": { "name": "En línea" },
+      "error": { "name": "Error" }
+    },
+    "select": {
+      "mowing_mode": { "name": "Modo de corte" }
+    }
+  }
+}

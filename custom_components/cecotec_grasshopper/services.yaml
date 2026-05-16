@@ -1,0 +1,11 @@
+start_border_mowing:
+  name: Start border mowing
+  description: Start the mower in border/edge mowing mode
+  fields:
+    entity_id:
+      name: Entity ID
+      description: The lawn mower entity to control
+      required: true
+      selector:
+        entity:
+          domain: lawn_mower

@@ -1,0 +1,38 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Cecotec Conga GrassHopper",
+        "description": "Enter the credentials you use in the **{app_name}** app.",
+        "data": {
+          "account_name": "Account name",
+          "email": "Email",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Invalid email or password. Check your credentials in the Conga GrassHopper 500 Map app.",
+      "no_devices": "Login succeeded but no mowers were found on this account.",
+      "cannot_connect": "Unable to reach the Cecotec cloud. Check your internet connection."
+    },
+    "abort": {
+      "already_configured": "This account is already configured."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "battery": { "name": "Battery" },
+      "wifi_level": { "name": "Wi-Fi level" },
+      "error_code": { "name": "Error code" },
+      "error_text": { "name": "Error message" }
+    },
+    "binary_sensor": {
+      "online": { "name": "Online" },
+      "error": { "name": "Error" }
+    },
+    "select": {
+      "mowing_mode": { "name": "Mowing mode" }
+    }
+  }
+}

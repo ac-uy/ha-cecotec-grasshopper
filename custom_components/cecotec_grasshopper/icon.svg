@@ -1,0 +1,62 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Light green background -->
+  <rect width="512" height="512" fill="#E8F5E9"/>
+  
+  <!-- Robot body - rounded rectangle -->
+  <rect x="120" y="140" width="272" height="220" rx="35" fill="#2E7D32" stroke="#1B5E20" stroke-width="3"/>
+  
+  <!-- Face area - lighter green -->
+  <rect x="140" y="160" width="232" height="140" rx="20" fill="#388E3C" stroke="#1B5E20" stroke-width="2"/>
+  
+  <!-- Left eye - white circle -->
+  <circle cx="200" cy="210" r="22" fill="#FFFFFF" stroke="#1B5E20" stroke-width="2"/>
+  <!-- Left pupil - black circle -->
+  <circle cx="200" cy="210" r="12" fill="#000000"/>
+  <!-- Left eye shine -->
+  <circle cx="205" cy="205" r="5" fill="#FFFFFF"/>
+  
+  <!-- Right eye - white circle -->
+  <circle cx="312" cy="210" r="22" fill="#FFFFFF" stroke="#1B5E20" stroke-width="2"/>
+  <!-- Right pupil - black circle -->
+  <circle cx="312" cy="210" r="12" fill="#000000"/>
+  <!-- Right eye shine -->
+  <circle cx="317" cy="205" r="5" fill="#FFFFFF"/>
+  
+  <!-- Mouth - happy smile -->
+  <path d="M 240 260 Q 256 280 272 260" stroke="#1B5E20" stroke-width="3" fill="none" stroke-linecap="round"/>
+  
+  <!-- Cutting deck area - yellow stripe -->
+  <rect x="140" y="310" width="232" height="35" rx="8" fill="#FFC107" stroke="#F57F17" stroke-width="2"/>
+  
+  <!-- Cutting blades indicator - small lines -->
+  <g stroke="#F57F17" stroke-width="2" stroke-linecap="round">
+    <line x1="170" y1="318" x2="170" y2="335"/>
+    <line x1="200" y1="318" x2="200" y2="335"/>
+    <line x1="230" y1="318" x2="230" y2="335"/>
+    <line x1="260" y1="318" x2="260" y2="335"/>
+    <line x1="290" y1="318" x2="290" y2="335"/>
+    <line x1="320" y1="318" x2="320" y2="335"/>
+    <line x1="350" y1="318" x2="350" y2="335"/>
+  </g>
+  
+  <!-- Left wheel - large -->
+  <circle cx="170" cy="400" r="55" fill="#212121" stroke="#000" stroke-width="2"/>
+  <circle cx="170" cy="400" r="45" fill="#424242" stroke="#555" stroke-width="2"/>
+  <circle cx="170" cy="400" r="15" fill="#000"/>
+  <!-- Wheel tread -->
+  <circle cx="170" cy="400" r="40" fill="none" stroke="#333" stroke-width="1" opacity="0.5"/>
+  <circle cx="170" cy="400" r="30" fill="none" stroke="#333" stroke-width="1" opacity="0.5"/>
+  
+  <!-- Right wheel - large -->
+  <circle cx="342" cy="400" r="55" fill="#212121" stroke="#000" stroke-width="2"/>
+  <circle cx="342" cy="400" r="45" fill="#424242" stroke="#555" stroke-width="2"/>
+  <circle cx="342" cy="400" r="15" fill="#000"/>
+  <!-- Wheel tread -->
+  <circle cx="342" cy="400" r="40" fill="none" stroke="#333" stroke-width="1" opacity="0.5"/>
+  <circle cx="342" cy="400" r="30" fill="none" stroke="#333" stroke-width="1" opacity="0.5"/>
+  
+  <!-- Antenna - small rod on top -->
+  <rect x="250" y="100" width="12" height="50" rx="6" fill="#558B2F" stroke="#1B5E20" stroke-width="2"/>
+  <!-- Antenna tip - red light -->
+  <circle cx="256" cy="90" r="8" fill="#FF5252" stroke="#C62828" stroke-width="2"/>
+</svg>
