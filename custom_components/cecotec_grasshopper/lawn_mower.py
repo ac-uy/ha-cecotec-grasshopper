@@ -85,10 +85,21 @@ class GrassHopperLawnMower(GrassHopperEntity, LawnMowerEntity):
 
     async def async_start_mowing(self) -> None:
         """Start or resume mowing."""
-        mowing_mode_entity = f"select.{self._device.device_sn}_mowing_mode"
-        mowing_mode_state = self.hass.states.get(mowing_mode_entity)
+        # Find the mowing mode select entity via entity registry
+        from homeassistant.helpers import entity_registry as er
         
-        if mowing_mode_state and mowing_mode_state.state == "edge":
+        registry = er.async_get(self.hass)
+        mode = "normal"
+        
+        # Look for our mowing_mode select entity by unique_id
+        target_uid = f"{DOMAIN}_{self._device.device_sn}_mowing_mode"
+        entry = registry.async_get_entity_id("select", DOMAIN, target_uid)
+        if entry:
+            state = self.hass.states.get(entry)
+            if state:
+                mode = state.state
+        
+        if mode == "edge":
             await self.hass.async_add_executor_job(
                 self.coordinator.api.start_border, self._device.device_sn
             )
