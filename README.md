@@ -118,6 +118,10 @@ automation:
           message: "GrassHopper battery is low: {{ states('sensor.mymower_battery') }}%"
 ```
 
+## Companion Card
+
+For a dedicated Lovelace card with status, controls, and schedule management, install the **[Cecotec GrassHopper Card](https://github.com/ac-uy/ha-cecotec-grasshopper-card)** — a custom card built specifically for this integration.
+
 ## Troubleshooting
 
 ### Integration not showing entities
