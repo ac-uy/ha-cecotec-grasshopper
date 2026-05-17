@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
@@ -103,6 +104,23 @@ class GrassHopperLawnMower(GrassHopperEntity, LawnMowerEntity):
 
         self._prev_activity = activity
         return activity
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return extra attributes with detailed status."""
+        mode = self._device.mode
+        detail_map = {
+            0: "standby",
+            1: "mowing",
+            2: "returning",
+            3: "charging",
+            7: "edge_mowing",
+            9: "charging",
+            10: "fully_charged",
+            14: "mowing",
+            18: "stopped",
+        }
+        return {"detailed_status": detail_map.get(mode, f"mode_{mode}")}
 
     async def async_start_mowing(self) -> None:
         """Start or resume mowing."""
