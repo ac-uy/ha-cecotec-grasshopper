@@ -23,9 +23,9 @@ set_schedule:
           domain: lawn_mower
     schedule:
       name: Schedule
-      description: "List of schedule entries. Each entry: {day: 1-7 (Mon-Sun), start: 'HH:MM', end: 'HH:MM', trim: true/false}"
+      description: "List of schedule entries. Each entry: {day: 1-7 (Mon-Sun), start: 'HH:MM', end: 'HH:MM', edge: true/false}"
       required: true
-      example: "[{day: 2, start: '09:00', end: '12:00', trim: true}, {day: 5, start: '09:00', end: '12:00', trim: true}]"
+      example: "[{day: 2, start: '09:00', end: '12:00', edge: true}, {day: 5, start: '09:00', end: '12:00', edge: true}]"
       selector:
         object:
 

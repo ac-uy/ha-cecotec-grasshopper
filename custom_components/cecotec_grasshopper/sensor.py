@@ -168,7 +168,7 @@ class GrassHopperSensor(GrassHopperEntity, SensorEntity):
                 day = DAY_NAMES.get(entry.get("dayOfWeek", 0), "Unknown")
                 start = entry.get("startAt", "?")[:5]
                 end = entry.get("endAt", "?")[:5]
-                trim = "✓" if entry.get("trimFlag") else "✗"
-                attrs[f"{day.lower()}"] = f"{start}-{end} (trim: {trim})"
+                edge = "✓" if entry.get("trimFlag") else "✗"
+                attrs[f"{day.lower()}"] = f"{start}-{end} (edge: {edge})"
             return attrs
         return None

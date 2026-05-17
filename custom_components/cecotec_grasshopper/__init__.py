@@ -123,7 +123,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             day = entry.get("day", 1)
             start = entry.get("start", "09:00")
             end = entry.get("end", "12:00")
-            trim = entry.get("trim", True)
+            edge = entry.get("edge", True)
             # Ensure HH:MM:SS format
             if start.count(":") == 1:
                 start += ":00"
@@ -133,7 +133,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 "dayOfWeek": day,
                 "startAt": start,
                 "endAt": end,
-                "trimFlag": trim,
+                "trimFlag": edge,
             })
 
         for coordinator in coordinators:
