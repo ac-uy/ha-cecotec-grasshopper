@@ -129,6 +129,24 @@ class GrassHopperCoordinator(DataUpdateCoordinator[GrassHopperDevice]):
             raise UpdateFailed(
                 f"Failed to fetch state for mower {self.device.device_sn}"
             )
+
+        # Also fetch settings/schedule (less critical, don't fail on error)
+        settings = await self.hass.async_add_executor_job(
+            self.api.fetch_device_settings, self.device.device_sn
+        )
+        if settings:
+            self.device.rain_delay_enabled = bool(settings.get("rainFlag", False))
+            self.device.rain_delay_duration = int(settings.get("rainDelayDuration", 180) or 180)
+            self.device.schedule_paused = bool(settings.get("pause", False))
+            self.device.schedule = settings.get("deviceScheduleList", [])
+            self.device.border_length = int(settings.get("borderLength", 0) or 0)
+            self.device.zone_percentages = [
+                int(settings.get("zoneFirstPercentage", 0) or 0),
+                int(settings.get("zoneSecondPercentage", 0) or 0),
+                int(settings.get("zoneThirdPercentage", 0) or 0),
+                int(settings.get("zoneFourthPercentage", 0) or 0),
+            ]
+
         return self.device
 
     def stop_mqtt(self) -> None:

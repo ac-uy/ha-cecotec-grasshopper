@@ -26,9 +26,27 @@ PLATFORMS: list[Platform] = [
 
 # Service schemas
 SERVICE_START_BORDER_MOWING = "start_border_mowing"
+SERVICE_SET_SCHEDULE = "set_schedule"
+SERVICE_SET_RAIN_DELAY = "set_rain_delay"
+
 SERVICE_SCHEMA = vol.Schema(
     {
         vol.Required("entity_id"): cv.entity_id,
+    }
+)
+
+SERVICE_SCHEDULE_SCHEMA = vol.Schema(
+    {
+        vol.Required("entity_id"): cv.entity_id,
+        vol.Required("schedule"): list,
+    }
+)
+
+SERVICE_RAIN_DELAY_SCHEMA = vol.Schema(
+    {
+        vol.Required("entity_id"): cv.entity_id,
+        vol.Required("enabled"): bool,
+        vol.Optional("duration", default=180): vol.All(int, vol.Range(min=30, max=720)),
     }
 )
 
@@ -91,6 +109,70 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         SERVICE_START_BORDER_MOWING,
         handle_start_border_mowing,
         schema=SERVICE_SCHEMA,
+    )
+
+    # Set schedule service
+    async def handle_set_schedule(call: ServiceCall) -> None:
+        """Handle set schedule service call."""
+        entity_id = call.data.get("entity_id")
+        schedule_data = call.data.get("schedule", [])
+
+        # Convert user-friendly format to API format
+        api_entries = []
+        for entry in schedule_data:
+            day = entry.get("day", 1)
+            start = entry.get("start", "09:00")
+            end = entry.get("end", "12:00")
+            trim = entry.get("trim", True)
+            # Ensure HH:MM:SS format
+            if start.count(":") == 1:
+                start += ":00"
+            if end.count(":") == 1:
+                end += ":00"
+            api_entries.append({
+                "dayOfWeek": day,
+                "startAt": start,
+                "endAt": end,
+                "trimFlag": trim,
+            })
+
+        for coordinator in coordinators:
+            await hass.async_add_executor_job(
+                coordinator.api.set_schedule,
+                coordinator.device.device_sn,
+                api_entries,
+            )
+            await coordinator.async_request_refresh()
+            return
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_SCHEDULE,
+        handle_set_schedule,
+        schema=SERVICE_SCHEDULE_SCHEMA,
+    )
+
+    # Set rain delay service
+    async def handle_set_rain_delay(call: ServiceCall) -> None:
+        """Handle set rain delay service call."""
+        enabled = call.data.get("enabled", True)
+        duration = call.data.get("duration", 180)
+
+        for coordinator in coordinators:
+            await hass.async_add_executor_job(
+                coordinator.api.set_rain_delay,
+                coordinator.device.device_sn,
+                enabled,
+                duration,
+            )
+            await coordinator.async_request_refresh()
+            return
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_RAIN_DELAY,
+        handle_set_rain_delay,
+        schema=SERVICE_RAIN_DELAY_SCHEMA,
     )
 
     return True

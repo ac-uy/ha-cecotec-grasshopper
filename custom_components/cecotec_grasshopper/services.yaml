@@ -9,3 +9,51 @@ start_border_mowing:
       selector:
         entity:
           domain: lawn_mower
+
+set_schedule:
+  name: Set mowing schedule
+  description: Set the weekly mowing schedule. Only include days you want active.
+  fields:
+    entity_id:
+      name: Entity ID
+      description: The lawn mower entity
+      required: true
+      selector:
+        entity:
+          domain: lawn_mower
+    schedule:
+      name: Schedule
+      description: "List of schedule entries. Each entry: {day: 1-7 (Mon-Sun), start: 'HH:MM', end: 'HH:MM', trim: true/false}"
+      required: true
+      example: "[{day: 2, start: '09:00', end: '12:00', trim: true}, {day: 5, start: '09:00', end: '12:00', trim: true}]"
+      selector:
+        object:
+
+set_rain_delay:
+  name: Set rain delay
+  description: Enable or disable rain delay and set duration
+  fields:
+    entity_id:
+      name: Entity ID
+      description: The lawn mower entity
+      required: true
+      selector:
+        entity:
+          domain: lawn_mower
+    enabled:
+      name: Enabled
+      description: Whether rain delay is enabled
+      required: true
+      selector:
+        boolean:
+    duration:
+      name: Duration (minutes)
+      description: Rain delay duration in minutes
+      required: false
+      default: 180
+      selector:
+        number:
+          min: 30
+          max: 720
+          step: 30
+          unit_of_measurement: min

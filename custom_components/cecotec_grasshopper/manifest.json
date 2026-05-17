@@ -6,7 +6,7 @@
   "documentation": "https://github.com/ac-uy/ha-cecotec-grasshopper/blob/main/README.md",
   "issue_tracker": "https://github.com/ac-uy/ha-cecotec-grasshopper/issues",
   "requirements": ["requests>=2.28.0", "paho-mqtt>=1.6.1"],
-  "version": "0.2.1",
+  "version": "0.3.0",
   "iot_class": "cloud_push",
   "homeassistant": "2024.1.0"
 }

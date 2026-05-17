@@ -67,6 +67,14 @@ class GrassHopperDevice:
         self.error_text: str = raw.get("faultStatusName", "") or ""
         self.online: bool = bool(raw.get("deviceOnlineFlag", False))
 
+        # Settings — updated by coordinator from device-setting endpoint
+        self.rain_delay_enabled: bool = bool(raw.get("rainFlag", False))
+        self.rain_delay_duration: int = int(raw.get("rainDelayDuration", 180) or 180)
+        self.schedule_paused: bool = bool(raw.get("pause", False))
+        self.schedule: list[dict] = []  # list of {dayOfWeek, startAt, endAt, trimFlag}
+        self.zone_percentages: list[int] = []  # [zone1%, zone2%, zone3%, zone4%]
+        self.border_length: int = 0  # in cm
+
 
 class GrassHopperAPI:
     """Thin wrapper around the sk-robot REST API."""
@@ -261,6 +269,89 @@ class GrassHopperAPI:
     def start_border(self, device_sn: str) -> bool:
         """Start border/edge mowing."""
         return self.send_command(device_sn, CMD_BORDER)
+
+    # ── Settings & Schedule ───────────────────────────────────────────────────
+
+    def fetch_device_settings(self, device_sn: str) -> dict | None:
+        """Fetch device settings including schedule, zones, rain delay."""
+        try:
+            response = requests.get(
+                url=URL_CECOTEC + PATH_DEVICE_SETTINGS + "/" + device_sn,
+                headers=self._auth_header,
+                timeout=10,
+            )
+            data = response.json()
+            if data.get("code", -1) != 0:
+                _LOGGER.error("Device settings error: %s", data)
+                return None
+            return data.get("data", {})
+        except Exception as exc:  # noqa: BLE001
+            _LOGGER.error("fetch_device_settings exception: %s", exc)
+            return None
+
+    def set_schedule(self, device_sn: str, schedule_entries: list[dict], auto_flag: bool = False) -> bool:
+        """Set the mowing schedule.
+
+        schedule_entries: list of dicts with keys:
+            dayOfWeek (1=Mon..7=Sun), startAt (HH:MM:SS), endAt (HH:MM:SS), trimFlag (bool)
+        Only include days that should be active. Days not included will be cleared.
+        """
+        try:
+            response = requests.post(
+                url=URL_CECOTEC + "/app_mower/device-schedule/setScheduling",
+                headers={
+                    "Accept-Language": self._language,
+                    "Authorization": "bearer " + self._session.get("access_token", ""),
+                    "Content-Type": "application/json; charset=UTF-8",
+                    "Host": HOST_CECOTEC,
+                    "Connection": "Keep-Alive",
+                    "User-Agent": "okhttp/4.8.1",
+                },
+                json={
+                    "appId": self.user_id,
+                    "autoFlag": auto_flag,
+                    "deviceSn": device_sn,
+                    "deviceScheduleBOS": schedule_entries,
+                },
+                timeout=10,
+            )
+            data = response.json()
+            _LOGGER.debug("set_schedule response: %s", data)
+            if not data.get("ok", False):
+                _LOGGER.error("set_schedule failed: %s", data.get("msg"))
+                return False
+            return True
+        except Exception as exc:  # noqa: BLE001
+            _LOGGER.error("set_schedule exception: %s", exc)
+            return False
+
+    def set_rain_delay(self, device_sn: str, enabled: bool, duration_minutes: int = 180) -> bool:
+        """Set rain delay settings."""
+        try:
+            response = requests.post(
+                url=URL_CECOTEC + "/app_mower/device-setting/setRainDelay",
+                headers={
+                    "Accept-Language": self._language,
+                    "Authorization": "bearer " + self._session.get("access_token", ""),
+                    "Content-Type": "application/json; charset=UTF-8",
+                    "Host": HOST_CECOTEC,
+                    "Connection": "Keep-Alive",
+                    "User-Agent": "okhttp/4.8.1",
+                },
+                json={
+                    "appId": self.user_id,
+                    "deviceSn": device_sn,
+                    "rainFlag": enabled,
+                    "rainDelayDuration": str(duration_minutes),
+                },
+                timeout=10,
+            )
+            data = response.json()
+            _LOGGER.debug("set_rain_delay response: %s", data)
+            return data.get("ok", False)
+        except Exception as exc:  # noqa: BLE001
+            _LOGGER.error("set_rain_delay exception: %s", exc)
+            return False
 
     # ── Cleanup ───────────────────────────────────────────────────────────────
 

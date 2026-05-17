@@ -20,6 +20,40 @@ from .const import DOMAIN, ROBOTS
 from .coordinator import GrassHopperCoordinator
 from .entity import GrassHopperEntity
 
+DAY_NAMES = {1: "Monday", 2: "Tuesday", 3: "Wednesday", 4: "Thursday", 5: "Friday", 6: "Saturday", 7: "Sunday"}
+
+
+def _get_next_schedule(device) -> str | None:
+    """Get the next scheduled mowing time as a readable string."""
+    from datetime import datetime, timedelta
+
+    if not device.schedule:
+        return None
+
+    now = datetime.now()
+    current_dow = now.isoweekday()  # 1=Monday, 7=Sunday
+
+    # Find the next scheduled day
+    for offset in range(7):
+        check_dow = ((current_dow - 1 + offset) % 7) + 1
+        for entry in device.schedule:
+            if entry.get("dayOfWeek") == check_dow:
+                start_time = entry.get("startAt", "00:00:00")
+                # Parse start time
+                parts = start_time.split(":")
+                hour, minute = int(parts[0]), int(parts[1])
+
+                # If it's today, check if the time hasn't passed
+                if offset == 0:
+                    scheduled = now.replace(hour=hour, minute=minute, second=0)
+                    if scheduled <= now:
+                        continue
+
+                day_name = DAY_NAMES.get(check_dow, "")
+                return f"{day_name} {hour:02d}:{minute:02d}"
+
+    return None
+
 
 @dataclass(frozen=True)
 class GrassHopperSensorDescription(SensorEntityDescription):
@@ -57,6 +91,28 @@ SENSOR_DESCRIPTIONS: tuple[GrassHopperSensorDescription, ...] = (
         translation_key="error_text",
         icon="mdi:alert-circle",
         value_fn=lambda d: d.error_text if d.error_text and d.error_text.lower() not in ("normal", "ok", "none", "") else None,
+    ),
+    GrassHopperSensorDescription(
+        key="rain_delay_duration",
+        translation_key="rain_delay_duration",
+        icon="mdi:weather-rainy",
+        native_unit_of_measurement="min",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda d: d.rain_delay_duration,
+    ),
+    GrassHopperSensorDescription(
+        key="border_length",
+        translation_key="border_length",
+        icon="mdi:tape-measure",
+        native_unit_of_measurement="m",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda d: round(d.border_length / 100, 1) if d.border_length else None,
+    ),
+    GrassHopperSensorDescription(
+        key="next_schedule",
+        translation_key="next_schedule",
+        icon="mdi:calendar-clock",
+        value_fn=lambda d: _get_next_schedule(d),
     ),
 )
 
@@ -96,3 +152,23 @@ class GrassHopperSensor(GrassHopperEntity, SensorEntity):
     def native_value(self) -> Any:
         """Return the sensor value."""
         return self.entity_description.value_fn(self._device)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return extra attributes for schedule sensor."""
+        if self.entity_description.key == "next_schedule":
+            schedule = self._device.schedule
+            if not schedule:
+                return {"schedule_entries": 0, "schedule_paused": self._device.schedule_paused}
+            attrs = {
+                "schedule_entries": len(schedule),
+                "schedule_paused": self._device.schedule_paused,
+            }
+            for entry in schedule:
+                day = DAY_NAMES.get(entry.get("dayOfWeek", 0), "Unknown")
+                start = entry.get("startAt", "?")[:5]
+                end = entry.get("endAt", "?")[:5]
+                trim = "✓" if entry.get("trimFlag") else "✗"
+                attrs[f"{day.lower()}"] = f"{start}-{end} (trim: {trim})"
+            return attrs
+        return None

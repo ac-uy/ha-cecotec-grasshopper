@@ -25,7 +25,10 @@
       "battery": { "name": "Battery" },
       "wifi_level": { "name": "Wi-Fi level" },
       "error_code": { "name": "Error code" },
-      "error_text": { "name": "Error message" }
+      "error_text": { "name": "Error message" },
+      "rain_delay_duration": { "name": "Rain delay duration" },
+      "border_length": { "name": "Border wire length" },
+      "next_schedule": { "name": "Next schedule" }
     },
     "binary_sensor": {
       "online": { "name": "Online" },
