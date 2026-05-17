@@ -79,6 +79,7 @@ class GrassHopperLawnMower(GrassHopperEntity, LawnMowerEntity):
         super().__init__(coordinator)
         self._attr_unique_id = f"{DOMAIN}_{self._device.device_sn}_mower"
         self._attr_name = None  # use device name as entity name
+        self._prev_activity: LawnMowerActivity = LawnMowerActivity.DOCKED
 
     @property
     def activity(self) -> LawnMowerActivity:
@@ -89,7 +90,18 @@ class GrassHopperLawnMower(GrassHopperEntity, LawnMowerEntity):
             return LawnMowerActivity.ERROR
         mode = self._device.mode
         activity = _MODE_TO_ACTIVITY.get(mode, LawnMowerActivity.ERROR)
-        _LOGGER.debug("Mower mode=%d -> activity=%s", mode, activity)
+        _LOGGER.debug("Mower mode=%d -> activity=%s (prev=%s)", mode, activity, self._prev_activity)
+
+        # Cecotec reports mode 0 for both "docked" and "paused".
+        # If we were mowing/returning and now get mode 0, treat as paused.
+        # It's only truly docked if charging (mode 3/9/10) or we went through returning (mode 2).
+        if mode == 0 and self._prev_activity in (
+            LawnMowerActivity.MOWING,
+            LawnMowerActivity.PAUSED,
+        ):
+            activity = LawnMowerActivity.PAUSED
+
+        self._prev_activity = activity
         return activity
 
     async def async_start_mowing(self) -> None:
