@@ -18,8 +18,8 @@ from .const import MQTT_HOST, MQTT_PASSWORD, MQTT_PORT, MQTT_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
-# Poll every 60s as fallback; MQTT push provides real-time updates
-SCAN_INTERVAL = timedelta(seconds=60)
+# Poll every 30s as fallback; MQTT push provides real-time updates
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 class GrassHopperCoordinator(DataUpdateCoordinator[GrassHopperDevice]):
