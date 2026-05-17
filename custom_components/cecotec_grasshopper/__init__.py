@@ -28,6 +28,9 @@ PLATFORMS: list[Platform] = [
 SERVICE_START_BORDER_MOWING = "start_border_mowing"
 SERVICE_SET_SCHEDULE = "set_schedule"
 SERVICE_SET_RAIN_DELAY = "set_rain_delay"
+SERVICE_ADD_SCHEDULE_ENTRY = "add_schedule_entry"
+SERVICE_REMOVE_SCHEDULE_ENTRY = "remove_schedule_entry"
+SERVICE_CLEAR_SCHEDULE = "clear_schedule"
 
 SERVICE_SCHEMA = vol.Schema(
     {
@@ -47,6 +50,23 @@ SERVICE_RAIN_DELAY_SCHEMA = vol.Schema(
         vol.Required("entity_id"): cv.entity_id,
         vol.Required("enabled"): bool,
         vol.Optional("duration", default=180): vol.All(int, vol.Range(min=30, max=720)),
+    }
+)
+
+SERVICE_ADD_ENTRY_SCHEMA = vol.Schema(
+    {
+        vol.Required("entity_id"): cv.entity_id,
+        vol.Required("day"): vol.All(int, vol.Range(min=1, max=7)),
+        vol.Required("start"): str,
+        vol.Required("end"): str,
+        vol.Optional("edge", default=True): bool,
+    }
+)
+
+SERVICE_REMOVE_ENTRY_SCHEMA = vol.Schema(
+    {
+        vol.Required("entity_id"): cv.entity_id,
+        vol.Required("day"): vol.All(int, vol.Range(min=1, max=7)),
     }
 )
 
@@ -173,6 +193,97 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         SERVICE_SET_RAIN_DELAY,
         handle_set_rain_delay,
         schema=SERVICE_RAIN_DELAY_SCHEMA,
+    )
+
+    # Add schedule entry service
+    async def handle_add_schedule_entry(call: ServiceCall) -> None:
+        """Add a single schedule entry, preserving existing ones."""
+        day = call.data.get("day")
+        start = call.data.get("start", "09:00")
+        end = call.data.get("end", "12:00")
+        edge = call.data.get("edge", True)
+
+        # Ensure HH:MM:SS format
+        if start.count(":") == 1:
+            start += ":00"
+        if end.count(":") == 1:
+            end += ":00"
+
+        for coordinator in coordinators:
+            # Get current schedule
+            current = list(coordinator.device.schedule or [])
+
+            # Remove existing entry for this day (replace it)
+            current = [e for e in current if e.get("dayOfWeek") != day]
+
+            # Add new entry
+            current.append({
+                "dayOfWeek": day,
+                "startAt": start,
+                "endAt": end,
+                "trimFlag": edge,
+            })
+
+            # Sort by day
+            current.sort(key=lambda e: e.get("dayOfWeek", 0))
+
+            await hass.async_add_executor_job(
+                coordinator.api.set_schedule,
+                coordinator.device.device_sn,
+                current,
+            )
+            await coordinator.async_request_refresh()
+            return
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_ADD_SCHEDULE_ENTRY,
+        handle_add_schedule_entry,
+        schema=SERVICE_ADD_ENTRY_SCHEMA,
+    )
+
+    # Remove schedule entry service
+    async def handle_remove_schedule_entry(call: ServiceCall) -> None:
+        """Remove a schedule entry for a specific day."""
+        day = call.data.get("day")
+
+        for coordinator in coordinators:
+            # Get current schedule, remove the day
+            current = list(coordinator.device.schedule or [])
+            current = [e for e in current if e.get("dayOfWeek") != day]
+
+            await hass.async_add_executor_job(
+                coordinator.api.set_schedule,
+                coordinator.device.device_sn,
+                current,
+            )
+            await coordinator.async_request_refresh()
+            return
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_REMOVE_SCHEDULE_ENTRY,
+        handle_remove_schedule_entry,
+        schema=SERVICE_REMOVE_ENTRY_SCHEMA,
+    )
+
+    # Clear all schedule service
+    async def handle_clear_schedule(call: ServiceCall) -> None:
+        """Remove all schedule entries."""
+        for coordinator in coordinators:
+            await hass.async_add_executor_job(
+                coordinator.api.set_schedule,
+                coordinator.device.device_sn,
+                [],  # Empty list clears all
+            )
+            await coordinator.async_request_refresh()
+            return
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CLEAR_SCHEDULE,
+        handle_clear_schedule,
+        schema=SERVICE_SCHEMA,
     )
 
     return True

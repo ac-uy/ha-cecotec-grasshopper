@@ -57,3 +57,76 @@ set_rain_delay:
           max: 720
           step: 30
           unit_of_measurement: min
+
+add_schedule_entry:
+  name: Add schedule entry
+  description: Add a mowing schedule entry for a specific day
+  fields:
+    entity_id:
+      name: Entity ID
+      description: The lawn mower entity
+      required: true
+      selector:
+        entity:
+          domain: lawn_mower
+    day:
+      name: Day of week
+      description: "1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday, 7=Sunday"
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 7
+          mode: box
+    start:
+      name: Start time
+      description: "Start time in HH:MM format"
+      required: true
+      selector:
+        time:
+    end:
+      name: End time
+      description: "End time in HH:MM format"
+      required: true
+      selector:
+        time:
+    edge:
+      name: Edge mowing
+      description: Whether to do border/edge mowing during this session
+      required: false
+      default: true
+      selector:
+        boolean:
+
+remove_schedule_entry:
+  name: Remove schedule entry
+  description: Remove a mowing schedule entry for a specific day
+  fields:
+    entity_id:
+      name: Entity ID
+      description: The lawn mower entity
+      required: true
+      selector:
+        entity:
+          domain: lawn_mower
+    day:
+      name: Day of week
+      description: "1=Monday, 2=Tuesday, 3=Wednesday, 4=Thursday, 5=Friday, 6=Saturday, 7=Sunday"
+      required: true
+      selector:
+        number:
+          min: 1
+          max: 7
+          mode: box
+
+clear_schedule:
+  name: Clear all schedule
+  description: Remove all scheduled mowing entries
+  fields:
+    entity_id:
+      name: Entity ID
+      description: The lawn mower entity
+      required: true
+      selector:
+        entity:
+          domain: lawn_mower

@@ -164,16 +164,27 @@ class GrassHopperSensor(GrassHopperEntity, SensorEntity):
         if self.entity_description.key == "next_schedule":
             schedule = self._device.schedule
             if not schedule:
-                return {"schedule_entries": 0, "schedule_paused": self._device.schedule_paused}
+                return {"schedule_entries": 0, "schedule_paused": self._device.schedule_paused, "schedule": []}
             attrs = {
                 "schedule_entries": len(schedule),
                 "schedule_paused": self._device.schedule_paused,
+                "schedule": [],
             }
+            entries = []
             for entry in schedule:
-                day = DAY_NAMES.get(entry.get("dayOfWeek", 0), "Unknown")
+                day_num = entry.get("dayOfWeek", 0)
+                day = DAY_NAMES.get(day_num, "Unknown")
                 start = entry.get("startAt", "?")[:5]
                 end = entry.get("endAt", "?")[:5]
-                edge = "✓" if entry.get("trimFlag") else "✗"
-                attrs[f"{day.lower()}"] = f"{start}-{end} (edge: {edge})"
+                edge = entry.get("trimFlag", False)
+                entries.append({
+                    "day": day,
+                    "day_number": day_num,
+                    "start": start,
+                    "end": end,
+                    "edge": edge,
+                })
+                attrs[f"{day.lower()}"] = f"{start}-{end} (edge: {'✓' if edge else '✗'})"
+            attrs["schedule"] = entries
             return attrs
         return None
