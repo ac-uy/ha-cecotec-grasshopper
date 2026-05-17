@@ -119,6 +119,10 @@ class GrassHopperCoordinator(DataUpdateCoordinator[GrassHopperDevice]):
             self.device.error_code = 0 if code == "normal" else int(code)
         if "faultStatusName" in data:
             self.device.error_text = data["faultStatusName"] or ""
+        if "rainStatusCode" in data:
+            self.device.rain_status = int(data["rainStatusCode"] or 0)
+        if "rainDelayLeft" in data:
+            self.device.rain_delay_left = int(data["rainDelayLeft"] or 0)
 
     async def _async_update_data(self) -> GrassHopperDevice:
         """Fetch latest state from the API (fallback polling)."""

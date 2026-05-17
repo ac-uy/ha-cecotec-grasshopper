@@ -113,6 +113,14 @@ SENSOR_DESCRIPTIONS: tuple[GrassHopperSensorDescription, ...] = (
         icon="mdi:calendar-clock",
         value_fn=lambda d: _get_next_schedule(d),
     ),
+    GrassHopperSensorDescription(
+        key="rain_delay_remaining",
+        translation_key="rain_delay_remaining",
+        icon="mdi:timer-sand",
+        native_unit_of_measurement="min",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda d: d.rain_delay_left if d.rain_status != 0 else 0,
+    ),
 )
 
 

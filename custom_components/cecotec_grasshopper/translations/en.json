@@ -27,12 +27,14 @@
       "error_code": { "name": "Error code" },
       "error_text": { "name": "Error message" },
       "rain_delay_duration": { "name": "Rain delay duration" },
+      "rain_delay_remaining": { "name": "Rain delay remaining" },
       "border_length": { "name": "Border wire length" },
       "next_schedule": { "name": "Next schedule" }
     },
     "binary_sensor": {
       "online": { "name": "Online" },
-      "error": { "name": "Error" }
+      "error": { "name": "Error" },
+      "rain_detected": { "name": "Rain detected" }
     }
   }
 }

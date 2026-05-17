@@ -40,6 +40,12 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[GrassHopperBinarySensorDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         value_fn=lambda d: bool(d.error_code),
     ),
+    GrassHopperBinarySensorDescription(
+        key="rain_detected",
+        translation_key="rain_detected",
+        device_class=BinarySensorDeviceClass.MOISTURE,
+        value_fn=lambda d: d.rain_status != 0,
+    ),
 )
 
 
@@ -70,9 +76,7 @@ class GrassHopperBinarySensor(GrassHopperEntity, BinarySensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{DOMAIN}_{self._device.device_sn}_{description.key}"
-        # Use translation key for name (Home Assistant will translate it)
-        if description.name_override:
-            self._attr_name = description.name_override
+        self._attr_translation_key = description.key
 
     @property
     def is_on(self) -> bool:

@@ -67,6 +67,10 @@ class GrassHopperDevice:
         self.error_text: str = raw.get("faultStatusName", "") or ""
         self.online: bool = bool(raw.get("deviceOnlineFlag", False))
 
+        # Rain sensor state
+        self.rain_status: int = int(raw.get("rainStatusCode", 0) or 0)
+        self.rain_delay_left: int = int(raw.get("rainDelayLeft", 0) or 0)
+
         # Settings — updated by coordinator from device-setting endpoint
         self.rain_delay_enabled: bool = bool(raw.get("rainFlag", False))
         self.rain_delay_duration: int = int(raw.get("rainDelayDuration", 180) or 180)
@@ -215,6 +219,8 @@ class GrassHopperAPI:
                 device.error_code = fresh.error_code
                 device.error_text = fresh.error_text
                 device.online = fresh.online
+                device.rain_status = fresh.rain_status
+                device.rain_delay_left = fresh.rain_delay_left
                 return True
         device.online = False
         return False
