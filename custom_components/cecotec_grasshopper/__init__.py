@@ -109,20 +109,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Register custom services
     async def handle_start_border_mowing(call: ServiceCall) -> None:
         """Handle start border mowing service call."""
-        entity_id = call.data.get("entity_id")
-        
-        # Find the coordinator for this entity
         for coordinator in coordinators:
-            if coordinator.entity_id == entity_id or f"{DOMAIN}.{coordinator.entity_id}" == entity_id:
-                await hass.async_add_executor_job(
-                    coordinator.api.send_command,
-                    coordinator.device.device_sn,
-                    4,  # CMD_BORDER
-                )
-                await coordinator.async_request_refresh()
-                return
-        
-        _LOGGER.warning(f"Entity {entity_id} not found for border mowing command")
+            await hass.async_add_executor_job(
+                coordinator.api.start_border,
+                coordinator.device.device_sn,
+            )
+            await coordinator.async_request_refresh()
+            return
 
     hass.services.async_register(
         DOMAIN,
