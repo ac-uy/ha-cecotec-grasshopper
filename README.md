@@ -180,3 +180,9 @@ This is an unofficial integration. Cecotec is not affiliated with this project. 
 ---
 
 **Questions or Issues?** [Open an issue on GitHub](https://github.com/ac-uy/ha-cecotec-grasshopper/issues)
+
+## Support
+
+If you find this useful, consider buying me a coffee ☕ or some tokens 🤖:
+
+[![PayPal](https://img.shields.io/badge/PayPal-Donate-blue.svg?style=flat-square&logo=paypal)](https://paypal.me/AndresCastro965?locale.x=es_ES&country.x=ES)
