@@ -37,6 +37,8 @@ _MODE_TO_ACTIVITY: dict[int, LawnMowerActivity] = {
     1: LawnMowerActivity.MOWING,      # mowing
     2: LawnMowerActivity.RETURNING,   # going home
     3: LawnMowerActivity.DOCKED,      # charging
+    4: LawnMowerActivity.PAUSED,      # unknown_4 (treat as paused)
+    5: LawnMowerActivity.PAUSED,      # paused (some models)
     6: LawnMowerActivity.ERROR,       # error
     7: LawnMowerActivity.MOWING,      # border mowing
     8: LawnMowerActivity.PAUSED,      # return paused
@@ -44,7 +46,11 @@ _MODE_TO_ACTIVITY: dict[int, LawnMowerActivity] = {
     10: LawnMowerActivity.DOCKED,     # fully charged
     13: LawnMowerActivity.ERROR,      # offline
     14: LawnMowerActivity.MOWING,     # continue mowing
+    15: LawnMowerActivity.MOWING,     # locating
+    16: LawnMowerActivity.DOCKED,     # firmware update
+    17: LawnMowerActivity.ERROR,      # stuck
     18: LawnMowerActivity.PAUSED,     # stopped
+    20: LawnMowerActivity.PAUSED,     # enter pin (waiting)
 }
 
 
@@ -81,7 +87,10 @@ class GrassHopperLawnMower(GrassHopperEntity, LawnMowerEntity):
             return LawnMowerActivity.ERROR
         if self._device.error_code:
             return LawnMowerActivity.ERROR
-        return _MODE_TO_ACTIVITY.get(self._device.mode, LawnMowerActivity.ERROR)
+        mode = self._device.mode
+        activity = _MODE_TO_ACTIVITY.get(mode, LawnMowerActivity.ERROR)
+        _LOGGER.debug("Mower mode=%d -> activity=%s", mode, activity)
+        return activity
 
     async def async_start_mowing(self) -> None:
         """Start or resume mowing."""
